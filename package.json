@@ -1,5 +1,5 @@
 {
-  "name": "kisisel-alan",
+  "name": "persona-site",
   "version": "1.0.0",
   "private": true,
   "type": "module",
@@ -9,7 +9,6 @@
   },
   "dependencies": {
     "@fontsource-variable/manrope": "5.3.0",
-    "@fontsource/instrument-serif": "5.3.0",
     "markdown-it": "15.0.3"
   }
 }

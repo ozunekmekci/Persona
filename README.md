@@ -1,4 +1,4 @@
-# Kişisel Alan
+# Persona
 
 Türkçe kişisel blog ve özgeçmiş sitesi.
 
@@ -10,6 +10,10 @@ npm run dev
 ```
 
 Önizleme adresi `http://127.0.0.1:4173`. Bir dosyayı düzenledikten sonra sunucuyu yeniden başlatabilir veya ikinci terminalde `npm run build` çalıştırabilirsin. Yayına hazır statik dosyalar `dist/` altında oluşur.
+
+## Ana sayfa
+
+Site adı, giriş metni ve öne çıkan çalışmalar `content/site.json` dosyasında. Özgeçmişe ad eklendiğinde ana sayfada kullanıcı adının yerine gösterilir.
 
 ## Yazı ekleme
 
@@ -41,4 +45,4 @@ Bir paragraf.
 
 ## Özgeçmiş
 
-`content/ozgecmis.json` içinde ad, unvan, tanıtım ve diğer bilgileri düzenle. Ad site başlığında da kullanılır. Deneyim ve eğitim için `baslik`, `kurum`, `tarih` ve isteğe bağlı `aciklama` alanları olan nesneler ekle. Beceriler metin listesi, bağlantılar ise `etiket` ve `url` alanlarına sahip nesnelerden oluşur. Boş bölümler sayfada gizlenir.
+`content/ozgecmis.json` içinde ad, unvan, tanıtım ve diğer bilgileri düzenle. Deneyim ve eğitim için `baslik`, `kurum`, `tarih` ve isteğe bağlı `aciklama` alanları olan nesneler ekle. Beceriler metin listesi, bağlantılar ise `etiket` ve `url` alanlarına sahip nesnelerden oluşur. Boş bölümler sayfada gizlenir.

@@ -3,7 +3,8 @@ import MarkdownIt from 'markdown-it';
 
 const markdown = new MarkdownIt();
 const profile = JSON.parse(await readFile('content/ozgecmis.json', 'utf8'));
-const siteName = profile.ad || 'Kişisel Alan';
+const site = JSON.parse(await readFile('content/site.json', 'utf8'));
+const siteName = site.ad;
 const dateFormat = new Intl.DateTimeFormat('tr-TR', { dateStyle: 'long', timeZone: 'UTC' });
 const escape = value => String(value ?? '').replace(/[&<>"']/g, char => ({
   '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
@@ -48,7 +49,8 @@ const experiments = {
     <figure class="experiment" data-experiment="shape">
       <figcaption>Çokgen tabanlı piramit</figcaption>
       <div class="range-control"><label for="sides-${index}">Taban kenarı</label><input id="sides-${index}" type="range" min="3" max="10" value="5"><output for="sides-${index}" data-sides>5</output></div>
-      <canvas class="experiment-graph" role="img" aria-label="Beşgen tabanlı piramit çizimi"></canvas>
+      <canvas class="experiment-graph shape-graph" role="img" aria-label="Beşgen tabanlı piramit çizimi"></canvas>
+      <p class="shape-hint" hidden>Sürükleyerek veya ok tuşlarıyla döndür.</p>
       <dl class="shape-stats" aria-live="polite"><div><dt>Yüz</dt><dd data-faces>6</dd></div><div><dt>Kenar</dt><dd data-edges>10</dd></div><div><dt>Köşe</dt><dd data-vertices>6</dd></div></dl>
     </figure>`,
 };
@@ -112,7 +114,7 @@ function layout({ title, summary, page, body, scripts = [] }) {
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="description" content="${escape(summary)}">
-  <meta name="theme-color" content="#fcfbf8">
+  <meta name="theme-color" content="${page === 'home' ? '#242820' : '#f8f6ef'}">
   <title>${escape(fullTitle)}</title>
   <link rel="icon" type="image/png" href="/assets/favicon.png">
   <link rel="stylesheet" href="/assets/style.css">
@@ -122,7 +124,7 @@ function layout({ title, summary, page, body, scripts = [] }) {
   <a class="skip" href="#icerik">İçeriğe geç</a>
   <header class="site-header">
     <div class="shell header-row">
-      <a class="brand" href="/" ${page === 'home' ? 'aria-current="page"' : ''}><span class="brand-mark" aria-hidden="true"><i></i></span><span>${escape(siteName)}</span></a>
+      <a class="brand" href="/" ${page === 'home' ? 'aria-current="page"' : ''}><span class="brand-mark" aria-hidden="true"></span><span>${escape(siteName)}</span></a>
       <nav aria-label="Ana menü">
         <a href="/#yazilar" ${page === 'post' ? 'aria-current="true"' : ''}>Yazılar</a>
         <a href="/ozgecmis/" ${page === 'cv' ? 'aria-current="page"' : ''}>Özgeçmiş</a>
@@ -131,7 +133,7 @@ function layout({ title, summary, page, body, scripts = [] }) {
   </header>
   ${body}
   <footer class="site-footer">
-    <div class="shell footer-row"><a class="brand" href="/"><span class="brand-mark" aria-hidden="true"><i></i></span><span>${escape(siteName)}</span></a><a href="/ozgecmis/">Özgeçmiş</a></div>
+    <div class="shell footer-row"><a class="brand" href="/"><span class="brand-mark" aria-hidden="true"></span><span>${escape(siteName)}</span></a><a href="/ozgecmis/">Özgeçmiş</a></div>
   </footer>
 </body>
 </html>`;
@@ -157,27 +159,22 @@ function card(post) {
 }
 
 const categories = [...new Set(posts.map(post => post.kategori))];
-const summary = 'Yazılarımı, etkileşimli deneylerimi ve özgeçmişimi bir araya getirdiğim kişisel alan.';
 const home = layout({
-  title: siteName, summary, page: 'home', scripts: ['home'],
-  body: `<main id="icerik" class="shell">
-    <section class="hero" aria-labelledby="giris">
+  title: siteName, summary: site.giris, page: 'home', scripts: ['home'],
+  body: `<main id="icerik">
+    <section class="hero" aria-labelledby="giris"><div class="shell hero-layout">
       <div class="hero-copy">
-        ${profile.ad ? `<p class="hero-name">${escape(profile.ad)}${profile.unvan ? `<span> / </span>${escape(profile.unvan)}` : ''}</p>` : ''}
-        <h1 id="giris">Düşünmek için <em>bir alan.</em></h1>
-        <p>${summary}</p>
-        <div class="hero-actions"><a class="button primary" href="#yazilar">Yazıları keşfet</a><a class="button secondary" href="/ozgecmis/">Özgeçmiş</a></div>
+        <p class="hero-name">${escape(profile.ad || `@${site.kullanici}`)}${profile.unvan ? `<span> / </span>${escape(profile.unvan)}` : ''}</p>
+        <h1 id="giris">${escape(site.baslik[0])} <span>${escape(site.baslik[1])}</span></h1>
+        <p>${escape(site.giris)}</p>
       </div>
-      <figure class="hero-art">
-        <canvas data-orbit aria-hidden="true"></canvas>
-        <span class="art-corner top-left" aria-hidden="true"></span><span class="art-corner top-right" aria-hidden="true"></span>
-        <span class="art-corner bottom-left" aria-hidden="true"></span><span class="art-corner bottom-right" aria-hidden="true"></span>
-        <div class="art-controls" hidden><span>3B form · Sürükleyerek döndür</span><button type="button" class="art-toggle" aria-label="Animasyonu durdur" data-orbit-toggle><i aria-hidden="true"></i></button></div>
-      </figure>
-    </section>
-    <section class="writing" id="yazilar" aria-labelledby="yazilar-baslik">
+      ${site.calismalar.length ? `<div class="hero-work"><h2>Çalışmalarımdan</h2><ul>
+        ${site.calismalar.map(work => `<li><a href="${escape(work.url)}">${escape(work.ad)}</a><p>${escape(work.aciklama)}</p></li>`).join('')}
+      </ul></div>` : ''}
+    </div></section>
+    <section class="shell writing" id="yazilar" aria-labelledby="yazilar-baslik">
       <div class="section-heading">
-        <div><h2 id="yazilar-baslik">Yazılar</h2><p>Notlar ve etkileşimli deneyler.</p></div>
+        <h2 id="yazilar-baslik">Yazılar</h2>
         ${categories.length > 1 ? `<div class="filters" role="group" aria-label="Yazı kategorileri" hidden>
           <button type="button" aria-pressed="true" data-filter="">Tümü</button>
           ${categories.map(category => `<button type="button" aria-pressed="false" data-filter="${escape(category)}">${escape(category)}</button>`).join('')}
@@ -241,7 +238,6 @@ await mkdir('dist/ozgecmis', { recursive: true });
 await cp('src/assets', 'dist/assets', { recursive: true });
 const fonts = {
   '@fontsource-variable/manrope': ['manrope-latin-wght-normal.woff2', 'manrope-latin-ext-wght-normal.woff2'],
-  '@fontsource/instrument-serif': ['instrument-serif-latin-400-italic.woff2'],
 };
 for (const [family, files] of Object.entries(fonts)) {
   for (const file of files) await cp(`node_modules/${family}/files/${file}`, `dist/assets/${file}`);

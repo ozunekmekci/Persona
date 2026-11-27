@@ -1,0 +1,18 @@
+{
+  "ad": "Persona",
+  "kullanici": "ozunekmekci",
+  "baslik": ["Yazılım, tasarım", "ve merak ettiklerim."],
+  "giris": "Yaptığım işlerden notlar, aklımda kalan sorular ve kurcalayabileceğin küçük deneyler.",
+  "calismalar": [
+    {
+      "ad": "Portakal Çiçeği Atölye",
+      "aciklama": "Kişiye özel kutlama ürünleri için web sitesi.",
+      "url": "https://github.com/ozunekmekci/portakalcicegiwebsite"
+    },
+    {
+      "ad": "CihazQR",
+      "aciklama": "QR kodla hastane cihaz envanteri yönetimi.",
+      "url": "https://github.com/ozunekmekci/cihazqr"
+    }
+  ]
+}

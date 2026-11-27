@@ -33,15 +33,15 @@ export function dot(context, x, y, radius, color) {
   context.fill();
 }
 
-export function pyramid(context, width, height, sides, art = false) {
+export function pyramid(context, width, height, sides, { art = false, rotation = 0 } = {}) {
   const centerX = width / 2;
   const centerY = height * .65;
   const scaleX = Math.min(width * .25, height * .8);
   const scaleY = height * .19;
-  const teal = art ? '#2f6865' : '#3751c3';
+  const teal = art ? '#476650' : '#53634e';
   const tip = [centerX + scaleX * .12, height * .105];
   const vertices = Array.from({ length: sides }, (_, index) => {
-    const angle = (index + .39) / sides * 2 * Math.PI;
+    const angle = (index + .39) / sides * 2 * Math.PI + rotation;
     return [centerX + Math.cos(angle) * scaleX, centerY + Math.sin(angle) * scaleY];
   });
   const faces = vertices.map((left, index) => {
@@ -55,7 +55,7 @@ export function pyramid(context, width, height, sides, art = false) {
     context.lineTo(...left);
     context.lineTo(...right);
     context.closePath();
-    context.fillStyle = art ? `rgba(45,117,112,${opacity})` : `rgba(69,96,232,${opacity})`;
+    context.fillStyle = `rgba(67,102,74,${opacity})`;
     context.fill();
     line(context, [tip, left, right, tip], teal, 1);
   }

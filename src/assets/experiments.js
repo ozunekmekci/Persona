@@ -31,19 +31,19 @@ function wireCurve(fig) {
     for (let step = 0; step <= 4; step++) {
       const x = left + (right - left) * step / 4;
       const y = top + (bottom - top) * step / 4;
-      line(context, [[x, top], [x, bottom]], '#e0e5f7');
-      line(context, [[left, y], [right, y]], '#e0e5f7');
+      line(context, [[x, top], [x, bottom]], '#ece4d7');
+      line(context, [[left, y], [right, y]], '#ece4d7');
     }
-    line(context, [[left, top], [left, bottom], [right, bottom]], '#a6afcf');
-    line(context, [[left, bottom], [right, top]], '#959fbd', 1.2);
+    line(context, [[left, top], [left, bottom], [right, bottom]], '#a39c8e');
+    line(context, [[left, bottom], [right, top]], '#908779', 1.2);
     const points = Array.from({ length: 81 }, (_, index) => {
       const t = index / 80;
       return [left + (right - left) * t, bottom - (bottom - top) * curve.easing(t)];
     });
-    line(context, points, '#2d43df', 2.3);
-    dot(context, ...points[0], 2.7, '#2d43df');
-    dot(context, ...points.at(-1), 2.7, '#2d43df');
-    context.fillStyle = '#555e79';
+    line(context, points, '#ab4a32', 2.3);
+    dot(context, ...points[0], 2.7, '#ab4a32');
+    dot(context, ...points.at(-1), 2.7, '#ab4a32');
+    context.fillStyle = '#686455';
     context.font = '12px Manrope, sans-serif';
     context.fillText('Yol', 7, top + 8);
     context.fillText('Zaman', right - 37, height - 8);
@@ -104,11 +104,13 @@ function wireShape(fig) {
   const vertices = fig.querySelector('[data-vertices]');
   const graph = fig.querySelector('canvas');
   const getSurface = canvasSurface(graph);
+  let rotation = 0;
+  let drag = null;
   function draw() {
     const surface = getSurface();
     if (!surface) return;
     const { context, width, height } = surface;
-    pyramid(context, width, height, input.valueAsNumber);
+    pyramid(context, width, height, input.valueAsNumber, { rotation });
   }
   function update() {
     const sides = input.valueAsNumber;
@@ -116,10 +118,32 @@ function wireShape(fig) {
     faces.textContent = sides + 1;
     edges.textContent = 2 * sides;
     vertices.textContent = sides + 1;
-    graph.setAttribute('aria-label', `Tabanı ${sides} kenarlı piramit çizimi`);
+    graph.setAttribute('aria-label', `Tabanı ${sides} kenarlı piramit. Döndürmek için sağ ve sol ok tuşlarını kullan.`);
     draw();
   }
   input.addEventListener('input', update);
+  graph.tabIndex = 0;
+  graph.setAttribute('aria-keyshortcuts', 'ArrowLeft ArrowRight');
+  fig.querySelector('.shape-hint').hidden = false;
+  graph.addEventListener('keydown', event => {
+    if (!['ArrowLeft', 'ArrowRight'].includes(event.key)) return;
+    event.preventDefault();
+    rotation += event.key === 'ArrowLeft' ? -.16 : .16;
+    draw();
+  });
+  graph.addEventListener('pointerdown', event => {
+    if (!event.isPrimary || event.button !== 0) return;
+    drag = { id: event.pointerId, x: event.clientX, rotation };
+    graph.setPointerCapture(drag.id);
+  });
+  graph.addEventListener('pointermove', event => {
+    if (drag?.id !== event.pointerId) return;
+    rotation = drag.rotation + (event.clientX - drag.x) * .025;
+    draw();
+  });
+  graph.addEventListener('lostpointercapture', event => {
+    if (drag?.id === event.pointerId) drag = null;
+  });
   new ResizeObserver(draw).observe(graph);
   update();
 }
