@@ -1,3 +1,5 @@
+import { canvasSurface, line, dot } from './canvas.js';
+
 const article = document.querySelector('.osai-article');
 const element = id => article.querySelector('#' + id);
 const number = id => element(id).valueAsNumber;
@@ -187,3 +189,149 @@ if (!matchMedia('(prefers-reduced-motion: reduce)').matches && 'IntersectionObse
   }, { threshold: .18 });
   for (const figure of article.querySelectorAll('.osai-visual')) observer.observe(figure);
 }
+
+const transitCanvas = element('transitScene');
+const transitSlider = element('transitTime');
+const transitButton = element('transitPlay');
+const motionPreference = matchMedia('(prefers-reduced-motion: reduce)');
+const transitSurface = canvasSurface(transitCanvas);
+const planetRatio = .22;
+const duration = 4800;
+let transitFrame = 0;
+let transitElapsed = 0;
+
+function obscuredLight(time) {
+  const distance = Math.abs(time - .5) / .15;
+  const radiusSquared = planetRatio ** 2;
+  if (distance >= 1 + planetRatio) return 0;
+  if (distance <= 1 - planetRatio) return radiusSquared;
+  const starAngle = Math.acos((distance ** 2 + 1 - radiusSquared) / (2 * distance));
+  const planetAngle = Math.acos((distance ** 2 + radiusSquared - 1) / (2 * distance * planetRatio));
+  const triangle = distance * Math.sin(starAngle);
+  return (starAngle + radiusSquared * planetAngle - triangle) / Math.PI;
+}
+
+function drawTransit() {
+  const surface = transitSurface();
+  if (!surface) return;
+  const { context, width, height } = surface;
+  const time = number('transitTime') / 100;
+  const left = 32;
+  const right = width - 25;
+  const centerX = (left + right) / 2;
+  const centerY = height * .335;
+  const radius = (right - left) * .15;
+  const skyRadius = radius * .22;
+  const gridTop = height * .68;
+  const gridBottom = height - 24;
+  const x = value => left + value * (right - left);
+  const y = value => gridTop + obscuredLight(value) / planetRatio ** 2 * (gridBottom - gridTop - 7);
+
+  for (let index = 0; index < 28; index++) {
+    const starX = ((index * 149 + 39) % 311) / 311 * width;
+    const starY = ((index * 61 + 17) % 137) / 137 * (gridTop - 15) + 6;
+    dot(context, starX, starY, index % 6 === 0 ? 1.3 : .62, '#c8d9dd65');
+  }
+
+  context.setLineDash([3, 5]);
+  line(context, [[left, centerY], [right, centerY]], '#78918b80');
+  context.setLineDash([]);
+
+  const glow = context.createRadialGradient(centerX, centerY, radius * .55, centerX, centerY, radius * 1.55);
+  glow.addColorStop(0, '#e1ae6c52');
+  glow.addColorStop(1, '#e1ae6c00');
+  dot(context, centerX, centerY, radius * 1.55, glow);
+  const star = context.createRadialGradient(centerX - radius * .27, centerY - radius * .34, 1, centerX, centerY, radius);
+  star.addColorStop(0, '#fff1bf');
+  star.addColorStop(.72, '#e9b976');
+  star.addColorStop(1, '#d08852');
+  dot(context, centerX, centerY, radius, star);
+  dot(context, x(time), centerY, skyRadius + .9, '#d0cbbc');
+  dot(context, x(time), centerY, skyRadius, '#1d2925');
+
+  const samples = Array.from({ length: 101 }, (_, index) => index / 100);
+  line(context, [[left, gridTop], [left, gridBottom], [right, gridBottom]], '#8b9e958c');
+  line(context, samples.map(value => [x(value), y(value)]), '#edbd86', 2);
+  line(context, [[x(time), gridTop], [x(time), gridBottom]], '#d6e5dc5c');
+  dot(context, x(time), y(time), 3.5, '#fff2c9');
+
+  context.fillStyle = '#d8dfd5';
+  context.font = '12px Manrope, sans-serif';
+  context.fillText('Göreli ışık', left, gridTop - 9);
+  context.textAlign = 'right';
+  context.fillText('Zaman', right, height - 7);
+  context.textAlign = 'left';
+}
+
+function describeTransit() {
+  const time = number('transitTime') / 100;
+  const decrease = obscuredLight(time) * 100;
+  const message = decrease < .01
+    ? 'Gezegen yıldızın önünde değil. Işık başlangıç düzeyinde.'
+    : 'Gezegen yıldızın önünde. Bu modelde görünen ışık %' + format(decrease, 2) + ' azalıyor.';
+  show('transitStatus', message);
+  transitSlider.setAttribute('aria-valuetext', '%' + number('transitTime') + ' · ' + message);
+}
+
+function pauseTransit(label) {
+  cancelAnimationFrame(transitFrame);
+  transitFrame = 0;
+  transitButton.textContent = label;
+  describeTransit();
+}
+
+if (transitCanvas.getContext('2d')) {
+  transitCanvas.hidden = false;
+  transitButton.hidden = false;
+  transitSlider.closest('.transit-scrub').hidden = false;
+  new ResizeObserver(drawTransit).observe(transitCanvas);
+  transitSlider.addEventListener('input', () => {
+    transitElapsed = duration * number('transitTime') / 100;
+    pauseTransit('Geçişi oynat');
+    drawTransit();
+  });
+
+  transitButton.addEventListener('click', () => {
+    if (transitFrame) {
+      pauseTransit('Geçişi sürdür');
+      return;
+    }
+    if (motionPreference.matches) {
+      transitSlider.value = 50;
+      drawTransit();
+      describeTransit();
+      return;
+    }
+    if (transitElapsed >= duration) transitElapsed = 0;
+    const initialElapsed = transitElapsed;
+    let start;
+    const update = now => {
+      start ??= now;
+      transitElapsed = Math.min(duration, initialElapsed + now - start);
+      transitSlider.value = Math.round(100 * transitElapsed / duration);
+      drawTransit();
+      if (transitElapsed === duration) pauseTransit('Yeniden oynat');
+      else transitFrame = requestAnimationFrame(update);
+    };
+    transitButton.textContent = 'Duraklat';
+    transitFrame = requestAnimationFrame(update);
+  });
+  motionPreference.addEventListener('change', () => {
+    if (motionPreference.matches && transitFrame) pauseTransit('Geçişi oynat');
+  });
+  describeTransit();
+}
+
+function revealLinkedModel() {
+  const anchor = document.getElementById(location.hash.slice(1));
+  let details = anchor?.closest('.osai-article details');
+  let opened = false;
+  while (details) {
+    opened ||= !details.open;
+    details.open = true;
+    details = details.parentElement.closest('.osai-article details');
+  }
+  if (opened) anchor.scrollIntoView();
+}
+window.addEventListener('hashchange', revealLinkedModel);
+revealLinkedModel();

@@ -606,3 +606,21 @@ body[data-page="home"] .site-header a:hover { color: #ffb59d; }
 
 .osai-article math { font-size: 1.05em; }
 .osai-widget .mathnote { overflow-x: auto; padding-block: .2rem .35rem; }
+
+.osai-appendix { margin-block: 1.2rem; padding: .65rem .95rem; border-block: 1px solid var(--line); }
+.osai-appendix > summary { cursor: pointer; color: var(--accent-hover); font-size: .95rem; font-weight: 800; }
+.osai-appendix > p { margin-top: .7rem; }
+.transit-figure { overflow: hidden; padding: 0; }
+.transit-figure figcaption { padding: .9rem 1rem; }
+.transit-figure canvas {
+  display: block;
+  width: 100%;
+  height: clamp(13rem, 42vw, 22rem);
+  background: radial-gradient(ellipse at 50% 28%, #334439, #202923 68%);
+}
+.transit-figure .visual-note, .transit-status { margin: .7rem 1rem .9rem; }
+.transit-controls { display: flex; align-items: end; flex-wrap: wrap; gap: .7rem 1rem; margin: .85rem 1rem 0; }
+.transit-controls:has(> [hidden] + [hidden]) { display: none; }
+.transit-scrub { display: grid; flex: 1 1 13rem; gap: .35rem; font-size: .86rem; font-weight: 750; }
+.transit-scrub input { min-width: 0; width: 100%; margin: 0; min-height: 1.5rem; accent-color: var(--accent); }
+.transit-status { color: var(--muted); font-size: .87rem; min-height: 2.7em; }
