@@ -1,6 +1,8 @@
 const progress = document.querySelector('.reading-progress span');
 const prose = document.querySelector('.prose');
 if (progress && prose) {
+  const wideContents = document.querySelector('[data-wide-open]');
+  if (wideContents) wideContents.open = matchMedia('(min-width: 44rem)').matches;
   const headings = [...document.querySelectorAll('.toc a')].map(link => ({
     link,
     heading: document.getElementById(link.hash.slice(1)),
