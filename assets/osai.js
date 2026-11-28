@@ -76,7 +76,7 @@ bind(['matrix'], () => {
   show('classicLabel', format(classic, 0));
   show('strassenLabel', format(strassen, 0));
   show('matrixSaving', '%' + format((1 - strassen / classic) * 100) + ' daha az skaler çarpma');
-  bar('matrixBar', 100 * strassen / classic);
+  element('matrixBar').style.setProperty('--amount', `${100 * strassen / classic}%`);
 });
 
 bind(['gpu', 'share'], () => {
@@ -108,13 +108,24 @@ const chipStages = [
   ['Üretim ve fiziksel denetim', 'MPW/fab üretimi, test kayıtları ve bağımsız silikon incelemesi. Kaynağın açıklığı tek başına güvenlik garantisi değildir.'],
 ];
 
+const chipScene = article.querySelector('[data-chip-scene]');
+const chipLayers = [...chipScene.querySelectorAll('.chip-layer')];
+const chipView = article.querySelector('[data-chip-view]');
+chipView.hidden = false;
+chipView.addEventListener('click', () => {
+  const topView = chipScene.classList.toggle('is-top-view');
+  chipView.setAttribute('aria-pressed', topView);
+});
+
 bind(['chipStage'], () => {
   const stage = number('chipStage');
   const [title, description] = chipStages[stage - 1];
   show('chipStageLabel', `${stage} / ${chipStages.length}`);
   show('chipStageTitle', title);
   show('chipStageDesc', description);
-  bar('chipStageBar', stage / chipStages.length * 100);
+  chipLayers.forEach((layer, index) => {
+    layer.classList.toggle('is-active', index === stage - 1);
+  });
 });
 
 bind(['mpwCost', 'mpwCount', 'mpwExtra'], () => {
@@ -131,17 +142,24 @@ bind(['mpwCost', 'mpwCount', 'mpwExtra'], () => {
   bar('mpwBar', shared / solo * 100);
 });
 
-bind(['hypotheses', 'lab', 'verify'], () => {
-  const hypotheses = number('hypotheses');
-  const lab = number('lab');
-  const verify = number('verify');
-  const throughput = Math.min(hypotheses, lab, verify);
-  show('hypothesesLabel', hypotheses);
-  show('labLabel', lab);
-  show('verifyLabel', verify);
+const capacityLabels = { hypotheses: 'Hipotez üretimi', lab: 'Deney kapasitesi', verify: 'Doğrulama' };
+const capacityRows = [...element('scienceThroughput').children];
+bind(Object.keys(capacityLabels), () => {
+  const values = capacityRows.map(row => number(row.dataset.stage));
+  const throughput = Math.min(...values);
+  const max = Math.max(...values);
+  const bottlenecks = [];
+  for (const [index, row] of capacityRows.entries()) {
+    const stage = row.dataset.stage;
+    const value = values[index];
+    show(stage + 'Label', value);
+    row.querySelector('strong').textContent = value;
+    row.style.setProperty('--amount', `${100 * value / max}%`);
+    row.classList.toggle('is-bottleneck', value === throughput);
+    if (value === throughput) bottlenecks.push(capacityLabels[stage]);
+  }
   show('throughput', throughput);
-  show('bottleneck', throughput === hypotheses ? 'Hipotez üretimi' : throughput === lab ? 'Deney kapasitesi' : 'Doğrulama');
-  bar('throughputBar', throughput / Math.max(hypotheses, lab, verify) * 100);
+  show('bottleneck', bottlenecks.join(' / '));
 });
 
 bind(['teams', 'teamHours', 'infrastructure', 'reclaim'], () => {
@@ -158,3 +176,14 @@ bind(['teams', 'teamHours', 'infrastructure', 'reclaim'], () => {
   show('savedYears', format(saved / 2000));
   bar('savedBar', infrastructure * reclaim / 100);
 });
+
+if (!matchMedia('(prefers-reduced-motion: reduce)').matches && 'IntersectionObserver' in window) {
+  const observer = new IntersectionObserver(entries => {
+    for (const entry of entries) {
+      if (!entry.isIntersecting) continue;
+      entry.target.classList.add('osai-entered');
+      observer.unobserve(entry.target);
+    }
+  }, { threshold: .18 });
+  for (const figure of article.querySelectorAll('.osai-visual')) observer.observe(figure);
+}
