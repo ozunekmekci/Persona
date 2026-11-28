@@ -603,3 +603,6 @@ body[data-page="home"] .site-header a:hover { color: #ffb59d; }
   .cv-section { grid-template-columns: 7rem 1fr; }
   .cv-entry { break-inside: avoid; }
 }
+
+.osai-article math { font-size: 1.05em; }
+.osai-widget .mathnote { overflow-x: auto; padding-block: .2rem .35rem; }
